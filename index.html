@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html lang="zh-Hant">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>燒錄廠產出預估</title>
+
+    <script>
+
+        function calculateCompletionTime() {
+
+            const demand = parseInt(document.getElementById("demand").value);
+
+            const setupTime = parseFloat(document.getElementById("setupTime").value);
+
+            const outputPerHour = parseFloat(document.getElementById("outputPerHour").value);
+
+            const packingTime = parseFloat(document.getElementById("packingTime").value);
+
+            const startDate = document.getElementById("startDate").value;
+
+            const startTime = document.getElementById("startTime").value;
+
+ 
+
+            if (isNaN(demand) || isNaN(setupTime) || isNaN(outputPerHour) || isNaN(packingTime)) {
+
+                alert("請輸入所有欄位的有效數值。");
+
+                return;
+
+            }
+
+ 
+
+            let currentTime = new Date(`${startDate}T${startTime}`);
+
+            currentTime = adjustToWorkHours(currentTime, setupTime, "engineer");
+
+ 
+
+            const burnTime = demand / outputPerHour;
+
+            currentTime.setHours(currentTime.getHours() + burnTime);
+
+ 
+
+            currentTime = adjustToWorkHours(currentTime, packingTime, "worker");
+
+ 
+
+            const completionTime = currentTime.toLocaleString("zh-Hant", { hour12: false });
+
+            document.getElementById("result").innerHTML = `預估打包完成時間：${completionTime}`;
+
+        }
+
+ 
+
+        function adjustToWorkHours(currentTime, duration, role) {
+
+            const workingHours = { start: 9, end: 18 };
+
+            const isWeekend = (day) => day === 0 || day === 6;
+
+ 
+
+            let hoursAdded = 0;
+
+            while (hoursAdded < duration) {
+
+                const day = currentTime.getDay();
+
+                const hour = currentTime.getHours();
+
+ 
+
+                if (
+
+                    (role === "engineer" || (role === "worker" && !isWeekend(day))) &&
+
+                    hour >= workingHours.start &&
+
+                    hour < workingHours.end
+
+                ) {
+
+                    currentTime.setHours(currentTime.getHours() + 1);
+
+                    hoursAdded += 1;
+
+                } else {
+
+                    currentTime.setDate(currentTime.getDate() + 1);
+
+                    currentTime.setHours(workingHours.start, 0, 0, 0);
+
+                }
+
+            }
+
+            return currentTime;
+
+        }
+
+    </script>
+
+</head>
+
+<body>
+
+    <h1>燒錄廠產出預估</h1>
+
+ 
+
+    <label for="demand">需求數量 (pcs): </label>
+
+    <input type="number" id="demand" required><br><br>
+
+ 
+
+    <label for="setupTime">前段設置時間 (小時): </label>
+
+    <input type="number" step="0.1" id="setupTime" required><br><br>
+
+ 
+
+    <label for="outputPerHour">燒錄每小時產出 (pcs/h): </label>
+
+    <input type="number" step="0.1" id="outputPerHour" required><br><br>
+
+ 
+
+    <label for="packingTime">後段打包時間 (小時): </label>
+
+    <input type="number" step="0.1" id="packingTime" required><br><br>
+
+ 
+
+    <label for="startDate">開始日期 (YYYY-MM-DD): </label>
+
+    <input type="date" id="startDate" required><br><br>
+
+ 
+
+    <label for="startTime">開始時間 (HH:MM): </label>
+
+    <input type="time" id="startTime" required><br><br>
+
+ 
+
+    <button onclick="calculateCompletionTime()">計算預估打包完成時間</button>
+
+ 
+
+    <p id="result"></p>
+
+</body>
+
+</html>
